@@ -2,25 +2,55 @@ export type QuestionType = "tfng" | "ynng" | "mcq" | "fill-in-blank" | "matching
 
 export interface Question {
   id: string;
-  number: number; // The actual question number (1-40)
+  number: number;
   type: QuestionType;
   text: string;
-  options?: string[]; // For MCQ or Matching
-  answer: string; // The correct answer
+  options?: string[];
+  answer: string;
 }
 
 export interface Passage {
   id: string;
   title: string;
-  content: string[]; // Paragraphs
+  content: string[];
   questions: Question[];
 }
 
 export interface ReadingTest {
   id: string;
   title: string;
-  timeLimitSeconds: number; // Usually 3600 (60 mins)
-  passages: Passage[]; // Always 3 for IELTS
+  timeLimitSeconds: number;
+  passages: Passage[];
+}
+
+export interface ListeningSection {
+  id: string;
+  title: string;
+  audioUrl: string;
+  transcript: string;
+  questions: Question[];
+}
+
+export interface ListeningTest {
+  id: string;
+  title: string;
+  sections: ListeningSection[];
+}
+
+export interface WritingTask {
+  id: string;
+  type: "task1" | "task2";
+  prompt: string;
+  minWords: number;
+  imageUrl?: string;
+}
+
+export interface SpeakingPart {
+  id: string;
+  part: 1 | 2 | 3;
+  title: string;
+  instructions: string;
+  prompts: string[];
 }
 
 export interface UserProgress {
