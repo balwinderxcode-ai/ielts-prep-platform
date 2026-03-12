@@ -1,4 +1,5 @@
 import { ReadingTest } from "../types";
+import { originalTest1 } from "./originalTest1";
 
 export const readingTests: ReadingTest[] = [
   {
@@ -148,5 +149,6 @@ export const readingTests: ReadingTest[] = [
         ]
       }
     ]
-  }
+  },
+  originalTest1
 ];
