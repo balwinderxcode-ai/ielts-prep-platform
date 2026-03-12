@@ -40,13 +40,13 @@ export interface ListeningSection {
   id: string;
   title: string;
   audioUrl: string;
-  transcript: string;
-  questions: Question[];
+  questionGroups: QuestionGroup[];
 }
 
 export interface ListeningTest {
   id: string;
   title: string;
+  timeLimitSeconds: number;
   sections: ListeningSection[];
 }
 

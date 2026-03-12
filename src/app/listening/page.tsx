@@ -1,130 +1,273 @@
 "use client";
-import { useState } from "react";
-import { mockListeningTest } from "../../data/mock";
+import { useState, useEffect } from "react";
+import { listeningTests } from "../../data/listeningTests";
 import { useTestStore } from "../../store";
 import { Button } from "@/components/ui/Button";
+import { calculateListeningBand } from "../../utils/bands";
+import { ListeningTest as ListeningTestType } from "../../types";
 
 export default function ListeningTest() {
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [score, setScore] = useState(0);
-
-  const test = mockListeningTest;
-  const section = test.sections[0];
+  const [selectedTest, setSelectedTest] = useState<ListeningTestType | null>(null);
   const { addListeningScore } = useTestStore();
 
-  const handleFinish = () => {
-    let currentScore = 0;
-    section.questions.forEach((q) => {
-      if (answers[q.id]?.toLowerCase().trim() === q.answer.toLowerCase()) {
-        currentScore++;
-      }
-    });
-    setScore(currentScore);
-    addListeningScore(currentScore, section.questions.length);
-    setSubmitted(true);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [score, setScore] = useState(0);
+  const [band, setBand] = useState("");
+  const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
+
+  const handleSelectTest = (test: ListeningTestType) => {
+    setSelectedTest(test);
+    setAnswers({});
+    setSubmitted(false);
+    setScore(0);
+    setBand("");
+    setCurrentSectionIdx(0);
   };
 
-  const handleAnswerChange = (qId: string, value: string) => {
+  if (!selectedTest) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <h1 className="text-4xl font-extrabold text-slate-900 mb-8 tracking-tight">Select a Listening Test</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+          {listeningTests.map(t => (
+            <div 
+              key={t.id} 
+              className="bg-white p-8 rounded-2xl border-2 border-slate-200 hover:border-blue-500 hover:shadow-xl transition-all cursor-pointer group" 
+              onClick={() => handleSelectTest(t)}
+            >
+              <div className="bg-purple-50 text-purple-700 text-xs font-bold uppercase tracking-wider w-fit px-3 py-1 rounded-full mb-4">Academic & General</div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600">{t.title}</h2>
+              <p className="text-slate-600 font-medium mb-6">4 Sections • 40 Questions • 30 Minutes</p>
+              <Button className="w-full">Start Test</Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const currentSection = selectedTest.sections[currentSectionIdx];
+  const allQuestions = selectedTest.sections.flatMap(s => s.questionGroups.flatMap(g => g.questions));
+
+  const handleAnswer = (qNumber: number, answer: string) => {
     if (submitted) return;
-    setAnswers(prev => ({ ...prev, [qId]: value }));
+    setAnswers(prev => ({ ...prev, [qNumber]: answer }));
+  };
+
+  const cleanString = (str: string) => str.toLowerCase().replace(/[^\w\s]/g, '').trim();
+
+  const handleFinish = () => {
+    if (submitted) return;
+    let currentScore = 0;
+    allQuestions.forEach((q) => {
+      const uAnswer = answers[q.number] || "";
+      if (cleanString(uAnswer) === cleanString(q.answer)) {
+        currentScore++;
+      } else if (q.type === 'matching-headings') {
+        if (uAnswer.trim().toUpperCase() === q.answer.trim().toUpperCase()) {
+          currentScore++;
+        }
+      }
+    });
+    
+    setScore(currentScore);
+    const calculatedBand = calculateListeningBand(currentScore);
+    setBand(calculatedBand);
+    addListeningScore(currentScore, 40);
+    setSubmitted(true);
   };
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-100 -mx-4 sm:-mx-6 lg:-mx-8 -my-8">
-      {/* Top Navigation Bar - Exam Style */}
-      <div className="bg-slate-900 text-white px-6 py-3 flex justify-between items-center shrink-0 shadow-sm z-10">
+      {/* Top Navigation Bar */}
+      <div className="bg-slate-900 text-white px-6 py-3 flex justify-between items-center shrink-0 shadow-lg z-30">
         <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold tracking-wider">{test.title}</h1>
-          <div className="bg-slate-800 px-3 py-1 rounded text-sm text-slate-300 font-medium">
-            Section 1 of 4
+          <h1 className="text-xl font-bold tracking-wider hidden lg:block">{selectedTest.title}</h1>
+          <div className="flex bg-slate-800 rounded-md overflow-hidden p-1">
+            {selectedTest.sections.map((s, idx) => (
+              <button
+                key={s.id}
+                onClick={() => setCurrentSectionIdx(idx)}
+                className={`px-4 py-1.5 text-sm font-semibold rounded-sm transition-colors ${
+                  currentSectionIdx === idx ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                Section {idx + 1}
+              </button>
+            ))}
           </div>
         </div>
-        <div className="flex items-center space-x-6">
-          <div className={`flex items-center space-x-2 text-lg font-mono font-bold text-slate-400`}>
-            <span>Volume Check Required</span>
-          </div>
+
+        <div className="flex items-center space-x-4">
           <Button 
-            onClick={handleFinish}
-            disabled={submitted}
-            className={`${submitted ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+            onClick={handleFinish} 
+            disabled={submitted} 
+            className={`${submitted ? 'bg-green-600' : 'bg-blue-600'}`}
           >
-            {submitted ? `Score: ${score}/${section.questions.length}` : 'Finish Test'}
+            {submitted ? `Band: ${band} (${score}/40)` : 'Finish Test'}
           </Button>
+          <button onClick={() => setSelectedTest(null)} className="text-sm font-semibold text-slate-400 hover:text-white ml-2">Exit</button>
         </div>
       </div>
 
-      {/* Main Split Content Area */}
-      <div className="flex flex-1 flex-col overflow-y-auto p-10 bg-slate-50 items-center">
-        
-        {/* Audio Player Container */}
-        <div className="w-full max-w-3xl bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-8 sticky top-0 z-20">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-slate-900">{section.title}</h2>
-            <div className="flex items-center text-blue-600 space-x-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-              </svg>
-              <span className="font-semibold tracking-wide">Audio Source</span>
-            </div>
+      {/* Persistent Audio Player Area */}
+      <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 shrink-0 shadow-inner z-20 flex items-center justify-center">
+        <div className="w-full max-w-3xl flex items-center space-x-6">
+          <div className="shrink-0 flex items-center text-blue-800 font-bold text-sm uppercase tracking-widest bg-blue-100 px-3 py-1 rounded border border-blue-200">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+            Listening Audio
           </div>
           <audio 
+            key={currentSection.audioUrl}
             controls 
-            className="w-full bg-slate-100 rounded-lg outline-none"
-            src={section.audioUrl} 
+            className="flex-grow h-10 outline-none"
+            src={currentSection.audioUrl} 
           >
             Your browser does not support the audio element.
           </audio>
         </div>
+      </div>
 
-        {/* Questions Container */}
-        <div className="w-full max-w-3xl bg-white p-10 rounded-2xl shadow-sm border border-slate-200">
-          <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-            <h3 className="font-bold text-amber-900 mb-1">Instructions</h3>
-            <p className="text-amber-800 font-medium">Write NO MORE THAN TWO WORDS AND/OR A NUMBER for each answer.</p>
-          </div>
+      {/* Main Questions Content Area */}
+      <div className="flex-1 overflow-y-auto p-10 bg-slate-50 flex flex-col items-center">
+        <div className="w-full max-w-3xl">
+          <h2 className="text-3xl font-bold mb-8 text-slate-900 border-b pb-4">{currentSection.title}</h2>
+          
+          {currentSection.questionGroups.map((group) => (
+            <div key={group.id} className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-10">
+              <div className="bg-amber-50 p-5 rounded-xl border border-amber-200 mb-8">
+                <h3 className="font-bold text-lg text-amber-900 mb-1">{group.range}</h3>
+                <p className="text-amber-800 font-medium italic leading-relaxed whitespace-pre-line">{group.instruction}</p>
+              </div>
+              
+              <div className="space-y-10">
+                {group.questions.map((q) => {
+                  const uAnswer = answers[q.number] || "";
+                  const isCorrect = submitted && (cleanString(uAnswer) === cleanString(q.answer) || (q.type === 'matching-headings' && uAnswer.toUpperCase() === q.answer.toUpperCase()));
+                  const isWrong = submitted && !isCorrect;
 
-          <div className="space-y-8">
-            {section.questions.map((q, idx) => {
-              const isCorrect = submitted && answers[q.id]?.toLowerCase().trim() === q.answer.toLowerCase();
-              const isWrong = submitted && !isCorrect;
+                  return (
+                    <div key={q.id} className="flex flex-col space-y-4 pb-8 border-b border-slate-100 last:border-0 relative">
+                      <div className="flex items-start space-x-4">
+                        <span className="font-bold text-slate-800 bg-slate-100 border border-slate-200 w-9 h-9 flex items-center justify-center rounded-lg shrink-0 shadow-sm">{q.number}</span>
+                        <div className="flex-1">
+                           <p className="text-slate-800 text-lg font-semibold mb-4 leading-relaxed">{q.text}</p>
 
-              return (
-                <div key={q.id} className="flex flex-col sm:flex-row items-start sm:items-center p-6 bg-slate-50 border border-slate-200 rounded-xl relative overflow-hidden">
-                  <div className="flex items-center space-x-4 mb-4 sm:mb-0 sm:w-1/2">
-                    <span className="font-bold text-slate-700 bg-white border border-slate-300 w-10 h-10 flex items-center justify-center rounded-lg shrink-0 shadow-sm text-lg">
-                      {idx + 1}
-                    </span>
-                    <span className="text-slate-800 text-lg font-medium">{q.text}</span>
-                  </div>
-                  
-                  <div className="sm:w-1/2 relative">
-                    <input 
-                      type="text" 
-                      value={answers[q.id] || ""}
-                      disabled={submitted}
-                      onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                      className={`w-full bg-white border-2 rounded-lg outline-none px-4 py-3 font-medium transition-all text-lg shadow-inner ${
-                        submitted 
-                          ? isCorrect 
-                            ? 'border-green-500 text-green-700 bg-green-50' 
-                            : 'border-red-500 text-red-700 bg-red-50'
-                          : 'border-slate-300 focus:border-blue-500 text-slate-900'
-                      }`} 
-                      placeholder="Type your answer..."
-                    />
-                    
-                    {isWrong && (
-                      <div className="absolute top-full left-0 mt-2 text-sm text-green-700 font-bold bg-green-100 px-3 py-1 rounded-md border border-green-200">
-                        Answer: {q.answer}
+                           <div className="flex flex-wrap gap-4">
+                            {/* MCQ */}
+                            {group.type === 'mcq' && q.options?.map(opt => {
+                              const optSelected = uAnswer === opt;
+                              const optCorrect = submitted && q.answer === opt;
+                              const optWrongChoice = submitted && optSelected && q.answer !== opt;
+                              
+                              let btnClass = "bg-white hover:bg-slate-50 border-slate-300 text-slate-700";
+                              if (optSelected) btnClass = "bg-blue-600 text-white border-blue-600";
+                              if (submitted) {
+                                if (isCorrect) btnClass = "bg-green-600 text-white border-green-600";
+                                if (optWrongChoice) btnClass = "bg-red-500 text-white border-red-500";
+                              }
+
+                              return (
+                                <label key={opt} className={`flex items-center justify-center px-5 py-2.5 border rounded-lg cursor-pointer transition-all shadow-sm font-medium ${btnClass}`}>
+                                  <input 
+                                    type="radio" 
+                                    name={`question-${q.number}`} 
+                                    value={opt} 
+                                    className="hidden" 
+                                    disabled={submitted}
+                                    onChange={() => handleAnswer(q.number, opt)} 
+                                  />
+                                  <span>{opt}</span>
+                                </label>
+                              );
+                            })}
+
+                            {/* Matching */}
+                            {group.type === 'matching-headings' && (
+                              <select 
+                                disabled={submitted}
+                                value={uAnswer}
+                                onChange={(e) => handleAnswer(q.number, e.target.value)}
+                                className={`w-32 bg-white border-2 rounded-lg outline-none px-4 py-2 font-bold transition-all text-lg shadow-inner ${
+                                  submitted 
+                                    ? isCorrect ? 'border-green-500 text-green-700 bg-green-50' : 'border-red-500 text-red-700 bg-red-50'
+                                    : 'border-slate-300 focus:border-blue-500 text-slate-900'
+                                }`}
+                              >
+                                <option value="">-</option>
+                                {q.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            )}
+
+                            {/* Fill in the blank */}
+                            {group.type === 'fill-in-blank' && (
+                              <input 
+                                type="text" 
+                                value={uAnswer}
+                                disabled={submitted}
+                                onChange={(e) => handleAnswer(q.number, e.target.value)}
+                                className={`w-full max-w-sm bg-white border-2 rounded-lg outline-none px-4 py-3 font-semibold transition-all text-lg shadow-inner ${
+                                  submitted 
+                                    ? isCorrect ? 'border-green-500 text-green-700 bg-green-50' : 'border-red-500 text-red-700 bg-red-50'
+                                    : 'border-slate-300 focus:border-blue-500 text-slate-900'
+                                }`} 
+                                placeholder="Type your answer..."
+                              />
+                            )}
+                          </div>
+                          
+                          {isWrong && (
+                            <div className="mt-4 text-sm text-green-700 font-bold bg-green-100 px-4 py-2 rounded-lg border border-green-200 inline-block">
+                              Correct Answer: {q.answer}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
+      </div>
+
+      {/* Bottom Navigation Bar */}
+      <div className="bg-white border-t border-slate-300 p-4 flex justify-start items-center shrink-0 space-x-1 overflow-x-auto shadow-md z-30">
+        {allQuestions.map((q) => {
+          const isAnswered = !!answers[q.number];
+          const isCurrentSection = currentSection.questionGroups.some(g => g.questions.some(cq => cq.number === q.number));
+          
+          let boxClass = "bg-white text-slate-700 border-slate-300 hover:bg-slate-50";
+          if (isAnswered) boxClass = "bg-slate-800 text-white border-slate-900";
+          if (isCurrentSection && !isAnswered) boxClass = "bg-blue-50 text-blue-800 border-blue-300";
+
+          if (submitted) {
+            const uAnswer = answers[q.number] || "";
+            const correct = (cleanString(uAnswer) === cleanString(q.answer)) || (q.type === 'matching-headings' && uAnswer.toUpperCase() === q.answer.toUpperCase());
+            if (correct) {
+              boxClass = "bg-green-500 text-white border-green-600";
+            } else {
+              boxClass = "bg-red-500 text-white border-red-600";
+            }
+          }
+
+          return (
+            <button 
+              key={q.number}
+              onClick={() => {
+                const sIdx = selectedTest.sections.findIndex(s => s.questionGroups.some(g => g.questions.some(cq => cq.number === q.number)));
+                if (sIdx !== -1) setCurrentSectionIdx(sIdx);
+              }}
+              className={`w-9 h-9 shrink-0 flex items-center justify-center rounded-sm border text-xs font-bold transition-colors ${boxClass}`}
+            >
+              {q.number}
+            </button>
+          )
+        })}
       </div>
     </div>
   );

@@ -1,0 +1,46 @@
+Your task is to complete the IELTS preparation platform in `~/Projects/ielts-prep` by executing the remaining milestones in `TODO.md` and ensuring everything is bug-free using Playwright tests.
+
+Current state:
+The project is a Next.js (App Router) app using Tailwind CSS and Zustand.
+Milestone 1 (Reading Engine - Academic) is mostly done but needs General Training support.
+The other modules (Listening, Writing, Speaking) have very basic, non-functional UIs that need to be completely overhauled to match the IELTS computer-delivered format (like ielts-up.com).
+
+Requirements:
+
+1. Listening Engine (Milestone 2):
+- Build a 4-Section, 40-Question data architecture.
+- Create a persistent Audio Player component that stays visible while scrolling.
+- Implement Question Groups (Multiple Choice, Form/Summary completion).
+- Build the 40-question bottom tracker and calculate the 0-9 Band Score.
+- Add a realistic 40-question mock test with a placeholder 30-minute audio track (e.g., from a free source or generate a long empty track if needed, but ensure the UI works).
+
+2. Writing Engine (Milestone 3 & 4):
+- Split-pane interface (Prompt on left, Textarea on right).
+- Task 1 (Academic: Charts/Graphs) and Task 1 (General: Letters).
+- Task 2 (Essay).
+- Strict 60-minute countdown timer.
+- Live word counter (min 150 for Task 1, 250 for Task 2).
+- Selection menu to choose Academic vs. General.
+
+3. Speaking Engine (Milestone 5):
+- 3-Part progression UI (Intro, Cue Card, Discussion).
+- Timers for Part 2 (1 min prep, 2 min speak).
+- Audio recording functionality (using MediaRecorder API).
+
+4. Dashboard & Polish (Milestone 6):
+- Update `src/app/page.tsx` to clearly separate Academic vs. General tracks.
+- Add a "Review Mistakes" feature for Reading/Listening after submission.
+- Ensure 100% mobile responsiveness.
+
+5. Testing:
+- Install Playwright (`npm init playwright@latest`).
+- Write E2E tests for the Reading, Listening, Writing, and Speaking flows.
+- Ensure tests pass and fix any bugs found.
+
+6. Deployment:
+- Commit changes and push to GitHub.
+- Trigger a Netlify build.
+
+Work methodically. You can tackle this one module at a time.
+Use `npm run dev` to test locally if needed, or rely on Playwright.
+When completely finished, run: openclaw system event --text "Done: Built the complete IELTS platform with all modules and Playwright tests" --mode now
