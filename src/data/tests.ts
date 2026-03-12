@@ -1,5 +1,6 @@
 import { ReadingTest } from "../types";
 import { originalTest1 } from "./originalTest1";
+import { readingTest2 } from "./readingTest2";
 
 export const readingTests: ReadingTest[] = [
   {
@@ -150,5 +151,6 @@ export const readingTests: ReadingTest[] = [
       }
     ]
   },
+  readingTest2,
   originalTest1
 ];
