@@ -1,29 +1,59 @@
 "use client";
 import { useState, useEffect } from "react";
-import { mockReadingData } from "../../data/readingData";
+import { readingTests } from "../../data/tests";
 import { useTestStore } from "../../store";
 import { Button } from "@/components/ui/Button";
 import { calculateReadingBand } from "../../utils/bands";
+import { ReadingTest as ReadingTestType } from "../../types";
 
 export default function ReadingTest() {
-  const test = mockReadingData;
+  const [selectedTest, setSelectedTest] = useState<ReadingTestType | null>(null);
   const { addReadingScore } = useTestStore();
 
-  const [timeLeft, setTimeLeft] = useState(test.timeLimitSeconds);
+  const [timeLeft, setTimeLeft] = useState(3600);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [band, setBand] = useState("");
   const [currentPassageIdx, setCurrentPassageIdx] = useState(0);
 
-  const currentPassage = test.passages[currentPassageIdx];
-  const allQuestions = test.passages.flatMap(p => p.questions);
+  // When a test is selected, reset everything
+  const handleSelectTest = (test: ReadingTestType) => {
+    setSelectedTest(test);
+    setTimeLeft(test.timeLimitSeconds);
+    setAnswers({});
+    setSubmitted(false);
+    setScore(0);
+    setBand("");
+    setCurrentPassageIdx(0);
+  };
 
   useEffect(() => {
-    if (timeLeft <= 0 || submitted) return;
+    if (!selectedTest || timeLeft <= 0 || submitted) return;
     const timer = setInterval(() => setTimeLeft((t) => t - 1), 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, submitted]);
+  }, [timeLeft, submitted, selectedTest]);
+
+  if (!selectedTest) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <h1 className="text-4xl font-extrabold text-slate-900 mb-8">Select a Reading Test</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+          {readingTests.map(t => (
+            <div key={t.id} className="bg-white p-8 rounded-2xl border-2 border-slate-200 hover:border-blue-500 hover:shadow-lg transition cursor-pointer" onClick={() => handleSelectTest(t)}>
+              <div className="bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider w-fit px-3 py-1 rounded-full mb-4">Academic</div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">{t.title}</h2>
+              <p className="text-slate-600 font-medium mb-6">3 Passages • 40 Questions • 60 Minutes</p>
+              <Button className="w-full">Start Test</Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const currentPassage = selectedTest.passages[currentPassageIdx];
+  const allQuestions = selectedTest.passages.flatMap(p => p.questions);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -40,7 +70,6 @@ export default function ReadingTest() {
     if (submitted) return;
     let currentScore = 0;
     allQuestions.forEach((q) => {
-      // Basic fuzzy match for fill-in-the-blanks, strict for others
       if (answers[q.number]?.toLowerCase().trim() === q.answer.toLowerCase().trim()) {
         currentScore++;
       }
@@ -49,9 +78,6 @@ export default function ReadingTest() {
     setScore(currentScore);
     const calculatedBand = calculateReadingBand(currentScore);
     setBand(calculatedBand);
-    
-    // Convert to percentage-ish scale for dashboard tracking if preferred, or store the band
-    // The previous dashboard expected maxScore. For a real app, update the store to track bands.
     addReadingScore(currentScore, 40);
     setSubmitted(true);
   };
@@ -61,11 +87,10 @@ export default function ReadingTest() {
       {/* Top Navigation Bar - Exam Style */}
       <div className="bg-slate-900 text-white px-6 py-3 flex justify-between items-center shrink-0 shadow-sm z-10">
         <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold tracking-wider hidden sm:block">IELTS Academic Reading</h1>
+          <h1 className="text-xl font-bold tracking-wider hidden sm:block">{selectedTest.title}</h1>
           
-          {/* Passage Tabs */}
           <div className="flex bg-slate-800 rounded-md overflow-hidden p-1">
-            {test.passages.map((p, idx) => (
+            {selectedTest.passages.map((p, idx) => (
               <button
                 key={p.id}
                 onClick={() => setCurrentPassageIdx(idx)}
@@ -93,6 +118,7 @@ export default function ReadingTest() {
           >
             {submitted ? `Band: ${band} (${score}/40)` : 'Finish Test'}
           </Button>
+          <button onClick={() => setSelectedTest(null)} className="text-sm font-semibold text-slate-400 hover:text-white ml-2">Exit</button>
         </div>
       </div>
 
@@ -127,7 +153,6 @@ export default function ReadingTest() {
                     </div>
 
                     <div className="ml-12 flex flex-wrap gap-4">
-                      {/* MCQ / TFNG */}
                       {(q.type === 'tfng' || q.type === 'ynng' || q.type === 'mcq') && q.options?.map(opt => {
                         const optSelected = answers[q.number] === opt;
                         const optCorrect = submitted && q.answer === opt;
@@ -155,7 +180,6 @@ export default function ReadingTest() {
                         );
                       })}
 
-                      {/* Fill in the blank */}
                       {q.type === 'fill-in-blank' && (
                         <div className="w-full max-w-sm">
                           <input 
@@ -199,7 +223,6 @@ export default function ReadingTest() {
           if (isAnswered) boxClass = "bg-slate-800 text-white border-slate-900";
           if (isCurrentPassage && !isAnswered) boxClass = "bg-blue-50 text-blue-800 border-blue-300";
 
-          // If submitted, show red/green
           if (submitted) {
             const correct = answers[q.number]?.toLowerCase().trim() === q.answer.toLowerCase().trim();
             if (correct) {
@@ -213,8 +236,7 @@ export default function ReadingTest() {
             <button 
               key={q.number}
               onClick={() => {
-                // Find which passage this question belongs to and switch to it
-                const pIdx = test.passages.findIndex(p => p.questions.some(cq => cq.number === q.number));
+                const pIdx = selectedTest.passages.findIndex(p => p.questions.some(cq => cq.number === q.number));
                 if (pIdx !== -1) setCurrentPassageIdx(pIdx);
               }}
               className={`w-9 h-9 shrink-0 flex items-center justify-center rounded-sm border text-xs font-bold transition-colors ${boxClass}`}
