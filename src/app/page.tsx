@@ -2,103 +2,84 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTestStore } from "../store";
+import { Button } from "@/components/ui/Button";
 
 export default function Home() {
-  const { progress } = useTestStore();
+  const { progress, resetProgress } = useTestStore();
   const [isClient, setIsClient] = useState(false);
 
-  // Fix hydration mismatch for Zustand persist
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => setIsClient(true), []);
 
-  const totalTests = isClient 
-    ? progress.readingCompleted + progress.listeningCompleted + progress.writingCompleted + progress.speakingCompleted 
-    : 0;
+  const totalTests = isClient ? (progress.readingCompleted + progress.listeningCompleted + progress.writingCompleted + progress.speakingCompleted) : 0;
   
-  // Calculate average band (simplified logic)
-  const readingBand = progress.readingCompleted > 0 ? (progress.readingScore / (progress.readingCompleted * 3)) * 9 : 0;
-  const listeningBand = progress.listeningCompleted > 0 ? (progress.listeningScore / (progress.listeningCompleted * 2)) * 9 : 0;
-  const avgBand = totalTests > 0 && (readingBand > 0 || listeningBand > 0)
-    ? ((readingBand + listeningBand) / 2).toFixed(1) 
-    : "0.0";
-
-  const modules = [
-    { 
-      title: "Academic Reading Test", 
-      path: "/reading", 
-      desc: "Practice with actual computer-delivered IELTS interface. Split-screen layout with True/False/Not Given questions.", 
-      color: "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100",
-      icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-    },
-    { 
-      title: "Writing Task 2", 
-      path: "/writing", 
-      desc: "Real-time word counter and auto-save. Practice essay writing with a computer-delivered exam format.", 
-      color: "bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100",
-      icon: "M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-    },
-    { 
-      title: "Listening Test", 
-      path: "/listening", 
-      desc: "Interactive audio playback with fill-in-the-blank transcripts. Real-time answer validation.", 
-      color: "bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100",
-      icon: "M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-    },
-    { 
-      title: "Speaking Part 2", 
-      path: "/speaking", 
-      desc: "Live microphone recording. Practice your 2-minute long turn with playback and mock cue cards.", 
-      color: "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100",
-      icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2 2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-    }
-  ];
+  const readingBand = progress.readingCompleted > 0 ? (progress.readingScore / (progress.readingCompleted * 40)) * 9 : 0;
+  const listeningBand = progress.listeningCompleted > 0 ? (progress.listeningScore / (progress.listeningCompleted * 40)) * 9 : 0;
+  const avgBand = totalTests > 0 ? ((readingBand + listeningBand) / (readingBand > 0 && listeningBand > 0 ? 2 : 1)).toFixed(1) : "0.0";
 
   return (
-    <div className="flex flex-col items-center justify-start pt-8 pb-16">
-      <div className="text-center max-w-3xl mb-12">
-        <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight mb-6 leading-tight">
-          Master the Computer-Delivered IELTS Exam
+    <div className="max-w-6xl mx-auto py-12">
+      <div className="text-center mb-16">
+        <h1 className="text-6xl font-black text-slate-900 tracking-tighter mb-4">
+          IELTS<span className="text-blue-600">Pro</span>
         </h1>
-        <p className="text-xl text-slate-600 font-medium">
-          Experience the exact UI of the real test. Practice your reading, writing, listening, and speaking skills in a production-grade environment.
+        <p className="text-xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
+          The ultimate personal study tool. High-fidelity practice modules for every section of the computer-delivered IELTS exam.
         </p>
       </div>
 
-      {/* Dashboard Stats */}
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-12 flex flex-col md:flex-row items-center justify-between">
-        <div className="mb-6 md:mb-0 text-center md:text-left">
-          <h2 className="text-2xl font-bold text-slate-800 mb-1">Your Dashboard</h2>
-          <p className="text-slate-500 font-medium">Track your progress across all 4 modules.</p>
+      {/* Dashboard Card */}
+      <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden mb-12 flex flex-col md:flex-row">
+        <div className="p-10 md:w-2/3 border-b md:border-b-0 md:border-r border-slate-100">
+          <h2 className="text-3xl font-bold text-slate-900 mb-2">Welcome back!</h2>
+          <p className="text-slate-500 font-medium mb-8">You have completed {totalTests} practice sessions so far. Keep going!</p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              <span className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Reading</span>
+              <span className="text-2xl font-black text-slate-900">{isClient ? progress.readingCompleted : 0}</span>
+            </div>
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              <span className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Listening</span>
+              <span className="text-2xl font-black text-slate-900">{isClient ? progress.listeningCompleted : 0}</span>
+            </div>
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              <span className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Writing</span>
+              <span className="text-2xl font-black text-slate-900">{isClient ? progress.writingCompleted : 0}</span>
+            </div>
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              <span className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Speaking</span>
+              <span className="text-2xl font-black text-slate-900">{isClient ? progress.speakingCompleted : 0}</span>
+            </div>
+          </div>
         </div>
-        <div className="flex space-x-12">
-          <div className="text-center">
-            <span className="block text-4xl font-extrabold text-blue-600">
-              {isClient ? totalTests : 0}
-            </span>
-            <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Tests Taken</span>
-          </div>
-          <div className="text-center">
-            <span className="block text-4xl font-extrabold text-emerald-600">
-              {isClient ? avgBand : "0.0"}
-            </span>
-            <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Avg Band</span>
-          </div>
+        <div className="p-10 md:w-1/3 bg-slate-50/50 flex flex-col items-center justify-center text-center">
+           <span className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Estimated Band</span>
+           <div className="w-32 h-32 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl shadow-blue-200 border-4 border-white mb-6">
+              <span className="text-4xl font-black text-white">{isClient ? avgBand : "0.0"}</span>
+           </div>
+           <Button variant="outline" size="sm" onClick={resetProgress} className="text-xs">Reset Statistics</Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">
-        {modules.map((m) => (
-          <Link href={m.path} key={m.title} className={`block p-8 rounded-2xl border-2 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl ${m.color}`}>
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="bg-white p-3 rounded-full shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={m.icon} />
-                </svg>
+      {/* Module Selector */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {[
+          { title: "Reading", path: "/reading", icon: "📖", color: "bg-emerald-500", desc: "40 Questions • 60 Mins" },
+          { title: "Listening", path: "/listening", icon: "🎧", color: "bg-purple-500", desc: "40 Questions • 30 Mins" },
+          { title: "Writing", path: "/writing", icon: "✍️", color: "bg-blue-500", desc: "2 Tasks • 60 Mins" },
+          { title: "Speaking", path: "/speaking", icon: "💬", color: "bg-amber-500", desc: "3 Parts • 15 Mins" },
+        ].map(m => (
+          <Link href={m.path} key={m.title} className="group">
+            <div className="bg-white p-8 rounded-3xl border-2 border-slate-200 group-hover:border-blue-500 group-hover:shadow-2xl transition-all duration-500 h-full flex flex-col items-center text-center">
+              <div className={`w-16 h-16 ${m.color} text-white rounded-2xl text-3xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
+                {m.icon}
               </div>
-              <h2 className="text-3xl font-bold tracking-tight">{m.title}</h2>
+              <h3 className="text-2xl font-black text-slate-900 mb-2">{m.title}</h3>
+              <p className="text-slate-500 font-medium mb-4 text-sm">{m.desc}</p>
+              <div className="mt-auto text-blue-600 font-black text-xs uppercase tracking-widest group-hover:translate-x-1 transition-transform flex items-center">
+                Enter Module <span className="ml-2">→</span>
+              </div>
             </div>
-            <p className="text-lg font-medium opacity-90 leading-relaxed">{m.desc}</p>
           </Link>
         ))}
       </div>

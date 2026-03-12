@@ -53,9 +53,19 @@ export interface ListeningTest {
 export interface WritingTask {
   id: string;
   type: "task1" | "task2";
+  genre: "academic" | "general";
+  title: string;
   prompt: string;
   minWords: number;
   imageUrl?: string;
+}
+
+export interface WritingTest {
+  id: string;
+  title: string;
+  genre: "academic" | "general";
+  timeLimitSeconds: number; // Usually 3600 (60 mins)
+  tasks: WritingTask[]; // Always 2 (Task 1 & Task 2)
 }
 
 export interface SpeakingPart {
@@ -64,6 +74,12 @@ export interface SpeakingPart {
   title: string;
   instructions: string;
   prompts: string[];
+}
+
+export interface SpeakingTest {
+  id: string;
+  title: string;
+  parts: SpeakingPart[]; // Always 3
 }
 
 export interface UserProgress {

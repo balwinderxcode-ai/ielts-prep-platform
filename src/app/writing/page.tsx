@@ -1,105 +1,163 @@
 "use client";
 import { useState, useEffect } from "react";
-import { mockWritingTasks } from "../../data/mock";
+import { writingTests } from "../../data/writingTests";
 import { useTestStore } from "../../store";
 import { Button } from "@/components/ui/Button";
+import { WritingTest as WritingTestType } from "../../types";
 
 export default function WritingTest() {
-  const [text, setText] = useState("");
-  const [saved, setSaved] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  
-  const task = mockWritingTasks[0];
+  const [selectedTest, setSelectedTest] = useState<WritingTestType | null>(null);
   const { completeWritingTask } = useTestStore();
 
+  const [timeLeft, setTimeLeft] = useState(3600);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [currentTaskIdx, setCurrentTaskIdx] = useState(0);
+
+  const handleSelectTest = (test: WritingTestType) => {
+    setSelectedTest(test);
+    setTimeLeft(test.timeLimitSeconds);
+    setAnswers({});
+    setSubmitted(false);
+    setCurrentTaskIdx(0);
+  };
+
   useEffect(() => {
-    const savedData = localStorage.getItem(`ielts_writing_${task.id}`);
-    if (savedData && !submitted) setText(savedData);
-  }, [task.id, submitted]);
+    if (!selectedTest || timeLeft <= 0 || submitted) return;
+    const timer = setInterval(() => setTimeLeft((t) => t - 1), 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft, submitted, selectedTest]);
 
-  const wordCount = text.trim().split(/\s+/).filter(word => word.length > 0).length;
+  if (!selectedTest) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <h1 className="text-4xl font-extrabold text-slate-900 mb-8 tracking-tight">Select a Writing Test</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+          {writingTests.map(t => (
+            <div 
+              key={t.id} 
+              className="bg-white p-8 rounded-2xl border-2 border-slate-200 hover:border-blue-500 hover:shadow-xl transition-all cursor-pointer group" 
+              onClick={() => handleSelectTest(t)}
+            >
+              <div className={`text-xs font-bold uppercase tracking-wider w-fit px-3 py-1 rounded-full mb-4 ${
+                t.genre === 'academic' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'
+              }`}>
+                {t.genre === 'academic' ? 'Academic' : 'General Training'}
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600">{t.title}</h2>
+              <p className="text-slate-600 font-medium mb-6">2 Tasks • 60 Minutes</p>
+              <Button className="w-full">Start Test</Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-  const handleSave = () => {
+  const currentTask = selectedTest.tasks[currentTaskIdx];
+  const wordCount = (answers[currentTask.id] || "").trim().split(/\s+/).filter(w => w.length > 0).length;
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const handleFinish = () => {
     if (submitted) return;
-    localStorage.setItem(`ielts_writing_${task.id}`, text);
-    
     completeWritingTask();
     setSubmitted(true);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
   };
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-100 -mx-4 sm:-mx-6 lg:-mx-8 -my-8">
-      {/* Top Navigation Bar - Exam Style */}
-      <div className="bg-slate-900 text-white px-6 py-3 flex justify-between items-center shrink-0 shadow-sm z-10">
+      {/* Top Navigation Bar */}
+      <div className="bg-slate-900 text-white px-6 py-3 flex justify-between items-center shrink-0 shadow-lg z-30">
         <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold tracking-wider">IELTS Academic Writing</h1>
-          <div className="bg-slate-800 px-3 py-1 rounded text-sm text-slate-300 font-medium">
-            Task 2
+          <h1 className="text-xl font-bold tracking-wider hidden lg:block">{selectedTest.title}</h1>
+          <div className="flex bg-slate-800 rounded-md overflow-hidden p-1">
+            {selectedTest.tasks.map((t, idx) => (
+              <button
+                key={t.id}
+                onClick={() => setCurrentTaskIdx(idx)}
+                className={`px-4 py-1.5 text-sm font-semibold rounded-sm transition-colors ${
+                  currentTaskIdx === idx ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                Task {idx + 1}
+              </button>
+            ))}
           </div>
         </div>
+
         <div className="flex items-center space-x-6">
-          <div className={`flex items-center space-x-2 text-lg font-mono font-bold text-white`}>
-            <span>60:00</span>
+          <div className={`flex items-center space-x-2 text-lg font-mono font-bold ${timeLeft < 300 && !submitted ? 'text-red-400 animate-pulse' : 'text-white'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{formatTime(timeLeft)}</span>
           </div>
-          <Button 
-            onClick={handleSave}
-            disabled={submitted || text.length === 0}
-            className={`${submitted ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
-          >
-            {submitted ? 'Test Submitted' : 'Submit Test'}
+          <Button onClick={handleFinish} disabled={submitted} className={`${submitted ? 'bg-green-600' : 'bg-blue-600'}`}>
+            {submitted ? 'Completed' : 'Finish Test'}
           </Button>
+          <button onClick={() => setSelectedTest(null)} className="text-sm font-semibold text-slate-400 hover:text-white ml-2">Exit</button>
         </div>
       </div>
 
       {/* Main Split Content Area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         
-        {/* LEFT PANEL: Task Instructions */}
-        <div className="w-1/2 bg-white border-r border-slate-300 overflow-y-auto p-10 shadow-inner">
-          <h2 className="text-2xl font-bold mb-6 text-slate-900 font-serif">Writing Task 2</h2>
+        {/* LEFT PANEL: Instructions */}
+        <div className="w-full md:w-1/2 bg-white border-r border-slate-300 overflow-y-auto p-10 shadow-inner">
+          <h2 className="text-3xl font-bold mb-6 text-slate-900 font-serif">{currentTask.title}</h2>
           
-          <div className="prose max-w-none text-slate-800 leading-relaxed font-serif text-lg mb-8">
-            <p className="font-semibold text-slate-600 italic mb-4">You should spend about 40 minutes on this task.</p>
-            <p className="font-semibold mb-6">Write about the following topic:</p>
+          <div className="prose prose-lg max-w-none text-slate-800 leading-relaxed font-serif space-y-6">
+            <p className="italic font-semibold text-slate-600">
+              You should spend about {currentTask.type === 'task1' ? '20' : '40'} minutes on this task.
+            </p>
             
-            <div className="p-8 bg-blue-50 border border-blue-100 rounded-xl text-slate-800 shadow-sm font-medium">
-              {task.prompt}
+            <div className="bg-slate-50 p-8 rounded-xl border border-slate-200 shadow-sm text-lg font-medium leading-relaxed whitespace-pre-line">
+              {currentTask.prompt}
             </div>
+
+            {currentTask.imageUrl && (
+              <div className="mt-8 border rounded-lg overflow-hidden shadow-md">
+                <img src={currentTask.imageUrl} alt="Writing Task Visualization" className="w-full" />
+              </div>
+            )}
             
-            <p className="font-semibold text-slate-600 italic mt-8 mb-4">Give reasons for your answer and include any relevant examples from your own knowledge or experience.</p>
-            <p className="font-bold">Write at least {task.minWords} words.</p>
+            <p className="font-bold border-t pt-6 text-slate-900">
+              Write at least {currentTask.minWords} words.
+            </p>
           </div>
         </div>
 
-        {/* RIGHT PANEL: Text Editor */}
-        <div className="w-1/2 bg-slate-50 flex flex-col p-10 relative">
-          
+        {/* RIGHT PANEL: Editor */}
+        <div className="w-full md:w-1/2 bg-slate-50 flex flex-col p-10 relative">
           <textarea
-            className="flex-1 w-full p-8 border-2 border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none resize-none text-slate-800 text-lg leading-relaxed shadow-sm font-sans"
-            placeholder="Start writing your essay here..."
-            value={text}
             disabled={submitted}
-            onChange={(e) => {
-              setText(e.target.value);
-              setSaved(false);
-            }}
+            value={answers[currentTask.id] || ""}
+            onChange={(e) => setAnswers(prev => ({ ...prev, [currentTask.id]: e.target.value }))}
+            className="flex-grow w-full bg-white border-2 border-slate-200 rounded-2xl outline-none p-10 font-sans text-xl leading-relaxed shadow-inner focus:border-blue-500 transition-all resize-none"
+            placeholder="Type your response here..."
           ></textarea>
-          
-          <div className="absolute bottom-16 right-16 flex items-center justify-between pointer-events-none">
-            <div className="flex items-center space-x-4 bg-slate-900/80 backdrop-blur-md px-6 py-3 rounded-full text-white shadow-xl pointer-events-auto border border-slate-700">
-              <span className={`font-mono text-lg font-bold ${wordCount < task.minWords ? "text-amber-400" : "text-emerald-400"}`}>
-                Word count: {wordCount}
-              </span>
-              {saved && (
-                <span className="text-emerald-400 font-medium text-sm border-l border-slate-600 pl-4 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Saved
+
+          {/* Floating Stats Bar */}
+          <div className="absolute bottom-16 right-16 pointer-events-none">
+            <div className="bg-slate-900/90 backdrop-blur text-white px-8 py-4 rounded-full shadow-2xl flex items-center space-x-6 border border-slate-700 pointer-events-auto">
+              <div className="flex items-center space-x-2">
+                <span className="text-slate-400 font-bold uppercase text-xs tracking-widest">Words</span>
+                <span className={`text-2xl font-mono font-black ${wordCount < currentTask.minWords ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  {wordCount}
                 </span>
-              )}
+              </div>
+              <div className="w-px h-6 bg-slate-700"></div>
+              <div className="flex items-center space-x-2">
+                <span className="text-slate-400 font-bold uppercase text-xs tracking-widest">Target</span>
+                <span className="text-2xl font-mono font-black text-white">
+                  {currentTask.minWords}
+                </span>
+              </div>
             </div>
           </div>
         </div>
