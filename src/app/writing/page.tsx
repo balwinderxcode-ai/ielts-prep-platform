@@ -1,9 +1,28 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Writing() {
   const [text, setText] = useState("");
+  const [saved, setSaved] = useState(false);
+  
+  useEffect(() => {
+    const savedData = localStorage.getItem("ielts_writing_practice");
+    if (savedData) setText(savedData);
+  }, []);
+
   const wordCount = text.trim().split(/\s+/).filter(word => word.length > 0).length;
+
+  const handleSave = () => {
+    localStorage.setItem("ielts_writing_practice", text);
+    
+    // Track global progress
+    const progress = JSON.parse(localStorage.getItem("ielts_progress") || "{}");
+    progress.writing = (progress.writing || 0) + 1;
+    localStorage.setItem("ielts_progress", JSON.stringify(progress));
+
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -14,15 +33,27 @@ export default function Writing() {
         <p className="text-sm text-gray-500 mb-4">Discuss both views and give your own opinion.</p>
         
         <textarea
-          className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-y"
+          className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-y text-gray-800"
           placeholder="Start writing your essay here..."
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value);
+            setSaved(false);
+          }}
         ></textarea>
         
         <div className="mt-4 flex justify-between items-center text-sm font-semibold">
           <span className={wordCount < 250 ? "text-red-500" : "text-green-600"}>Words: {wordCount} / 250</span>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">Submit Essay</button>
+          
+          <div className="flex items-center space-x-4">
+            {saved && <span className="text-green-600 font-medium">Saved to Local Storage!</span>}
+            <button 
+              onClick={handleSave}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition"
+            >
+              Submit Essay
+            </button>
+          </div>
         </div>
       </div>
     </div>
