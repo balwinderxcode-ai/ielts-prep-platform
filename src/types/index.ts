@@ -1,52 +1,26 @@
+export type QuestionType = "tfng" | "ynng" | "mcq" | "fill-in-blank" | "matching-headings";
+
 export interface Question {
   id: string;
-  type: "mcq" | "tfng" | "fill-in-blank" | "matching";
+  number: number; // The actual question number (1-40)
+  type: QuestionType;
   text: string;
   options?: string[]; // For MCQ or Matching
-  answer: string;
+  answer: string; // The correct answer
 }
 
 export interface Passage {
   id: string;
   title: string;
-  content: string[]; // Array of paragraphs
+  content: string[]; // Paragraphs
   questions: Question[];
 }
 
 export interface ReadingTest {
   id: string;
   title: string;
-  passages: Passage[];
-}
-
-export interface ListeningSection {
-  id: string;
-  title: string;
-  audioUrl: string;
-  transcript: string; // Used for fill-in-the-blank text
-  questions: Question[];
-}
-
-export interface ListeningTest {
-  id: string;
-  title: string;
-  sections: ListeningSection[];
-}
-
-export interface WritingTask {
-  id: string;
-  type: "task1" | "task2";
-  prompt: string;
-  minWords: number;
-  imageUrl?: string; // For Task 1 charts
-}
-
-export interface SpeakingPart {
-  id: string;
-  part: 1 | 2 | 3;
-  title: string;
-  instructions: string;
-  prompts: string[];
+  timeLimitSeconds: number; // Usually 3600 (60 mins)
+  passages: Passage[]; // Always 3 for IELTS
 }
 
 export interface UserProgress {
