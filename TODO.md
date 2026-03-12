@@ -1,22 +1,35 @@
-# IELTS Platform Development Roadmap
+# IELTS-Up Replica Production Roadmap
 
-## Phase 1: Foundation & Design System
-- [x] Define global Tailwind theme (professional blue/slate palette, clear typography).
-- [x] Create reusable base UI components (Buttons, Inputs, Cards, Badges).
-- [x] Build a robust responsive layout (Header, Footer, Mobile Drawer).
+## Milestone 1: Reading Engine (✅ Completed)
+- [x] 1:1 Split-pane layout with passages on left, questions on right.
+- [x] Support 3 Passages and exactly 40 questions.
+- [x] Implement Question Groups (Matching Headings, TFNG, YNNG, Fill-in-blanks, MCQ).
+- [x] Paragraph tagging (A, B, C) for matching tasks.
+- [x] Strict grading algorithm and Band Score calculator (0-9 scale).
+- [x] Inject real test data and original test content.
 
-## Phase 2: Data Architecture & State
-- [x] Define TypeScript interfaces for test content (Reading, Listening, Writing, Speaking).
-- [x] Create structured JSON mock data for tests (removing hardcoded text from components).
-- [x] Implement global state management (React Context or Zustand) to track scores, timers, and test progress accurately.
+## Milestone 2: Listening Engine Overhaul (⏳ Next)
+- [ ] Create a 4-Section, 40-Question data architecture.
+- [ ] Build a persistent Audio Player that stays visible while scrolling.
+- [ ] Implement Question Groups (Map labelling, Multiple Choice, Form completion).
+- [ ] Build the 40-question bottom tracker and Listening Band Score calculator.
+- [ ] Inject a full 40-question original Listening test with mock audio track.
 
-## Phase 3: Core Modules Implementation
-- [x] **Reading:** High-fidelity split-pane view, text highlighting, multiple question types (MCQ, True/False/Not Given, Matching).
-- [x] **Listening:** Persistent custom audio player, synchronized sections, proper input validation.
-- [x] **Writing:** Task 1 (with image/chart support) and Task 2, accurate word counter, draft saving.
-- [x] **Speaking:** Multi-part progression (Part 1, 2, 3), robust microphone recording UI, audio playback.
+## Milestone 3: Writing Engine Overhaul
+- [ ] Build a split-pane Writing interface similar to computer-delivered IELTS.
+- [ ] Implement Task 1 (Academic) with image/chart/graph rendering.
+- [ ] Implement Task 2 (Essay) with prompt rendering.
+- [ ] Add strict 60-minute countdown and live word counters for both tasks.
+- [ ] Create a test selection menu and inject original Writing test prompts.
 
-## Phase 4: Dashboard & Polish
-- [x] Build User Dashboard (Test history, Band score calculation, progress charts).
-- [x] SEO Optimization (Meta tags, sitemap).
-- [x] Final QA and production Netlify deployment.
+## Milestone 4: Speaking Engine Overhaul
+- [ ] Build a 3-Part progression UI (Part 1: Intro, Part 2: Cue Card, Part 3: Discussion).
+- [ ] Implement strict timers (1 min prep, 2 min speak for Part 2).
+- [ ] Create a robust audio recording sequence that manages the flow of the test.
+- [ ] Create a test selection menu and inject original Speaking test prompts.
+
+## Milestone 5: Production Polish & Content Catalog
+- [ ] Finalize the Homepage/Dashboard to list all available tests across all 4 modules.
+- [ ] Ensure 100% mobile responsiveness (stacking split-panes on small screens).
+- [ ] Add "Review Mistakes" feature so users can see correct vs incorrect answers after submission.
+- [ ] Final QA of local storage persistence and Netlify deployment.
