@@ -1,6 +1,12 @@
 import { ReadingTest } from "../types";
 import { originalTest1 } from "./originalTest1";
 import { readingTest2 } from "./readingTest2";
+import { readingTest3 } from "./tests/rt3";
+import { readingTest4 } from "./tests/rt4";
+import { readingTest5 } from "./tests/rt5";
+import { readingTest6 } from "./tests/rt6";
+import { readingTest7 } from "./tests/rt7";
+import { readingTest8 } from "./tests/rt8";
 
 export const readingTests: ReadingTest[] = [
   {
@@ -57,100 +63,15 @@ export const readingTests: ReadingTest[] = [
             ]
           }
         ]
-      },
-      {
-        id: "p2",
-        title: "Passage 2: Life lessons from villains, crooks and gangsters",
-        content: [
-          { label: "A", text: "A notorious Mexican drug baron’s audacious escape from prison in July doesn’t, at first, appear to have much to teach corporate boards. But some in the business world suggest otherwise. Beyond the morally reprehensible side of criminals' work, some business gurus say organised crime syndicates, computer hackers, pirates and others operating outside the law could teach legitimate corporations a thing or two about how to hustle and respond to rapid change." },
-          { label: "B", text: "Far from encouraging illegality, these gurus argue that – in the same way big corporations sometimes emulate start-ups – business leaders could learn from the underworld about flexibility, innovation and the ability to pivot quickly. “There is a nimbleness to criminal organisations that legacy corporations [with large, complex layers of management] don’t have,” said Marc Goodman, head of the Future Crimes Institute and global cyber-crime advisor. While traditional businesses focus on rules they have to follow, criminals look to circumvent them. “For criminals, the sky is the limit and that creates the opportunity to think much, much bigger.”" },
-          { label: "C", text: "Joaquin Guzman, the head of the Mexican Sinaloa drug cartel, for instance, slipped out of his prison cell through a tiny hole in his shower that led to a mile-long tunnel fitted with lights and ventilation. Making a break for it required creative thinking, long-term planning and perseverance – essential skills similar to those needed to achieve success in big business." },
-          { label: "D", text: "While Devin Liddell, who heads brand strategy for Seattle-based design consultancy, Teague, condemns the violence and other illegal activities he became curious as to how criminal groups endure. Some cartels stay in business despite multiple efforts by law enforcement on both sides of the US border and millions of dollars from international agencies to shut them down. Liddell genuinely believes there’s a lesson in longevity here. One strategy he underlined was how the bad guys respond to change. In order to bypass the border between Mexico and the US, for example, the Sinaloa cartel went to great lengths. It built a vast underground tunnel, hired family members as border agents and even used a catapult to circumvent a high-tech fence." },
-          { label: "E", text: "By contrast, many legitimate businesses fail because they hesitate to adapt quickly to changing market winds. One high-profile example is movie and game rental company Blockbuster, which didn’t keep up with the market and lost business to mail order video rentals and streaming technologies. The brand has all but faded from view. Liddell argues the difference between the two groups is that criminal organisations often have improvisation encoded into their daily behaviour, while larger companies think of innovation as a set process. “This is a leadership challenge,” said Liddell. “How well companies innovate and organise is a reflection of leadership.”" },
-          { label: "F", text: "Cash-strapped start-ups also use unorthodox strategies to problem solve and build their businesses up from scratch. This creativity and innovation is often borne out of necessity, such as tight budgets. Both criminals and start-up founders “question authority, act outside the system and see new and clever ways of doing things,” said Goodman. “Either they become Elon Musk or El Chapo.” And, some entrepreneurs aren’t even afraid to operate in legal grey areas in their effort to disrupt the marketplace. The co-founders of music streaming service Napster, for example, knowingly broke music copyright rules with their first online file sharing service, but their technology paved the way for legal innovation as regulators caught up." },
-          { label: "G", text: "Goodman and others believe thinking hard about problem solving before worrying about restrictions could prevent established companies falling victim to rivals less constrained by tradition. In their book The Misfit Economy, Alexa Clay and Kyra Maya Phillips examine how individuals can apply that mindset to become more innovative and entrepreneurial within corporate structures. They studied not just violent criminals like Somali pirates, but others who break the rules in order to find creative solutions to their business problems, such as people living in the slums of Mumbai or computer hackers. They picked out five common traits among this group: the ability to hustle, pivot, provoke, hack and copycat." },
-          { label: "H", text: "Clay gives a Saudi entrepreneur named Walid Abdul-Wahab as a prime example. Abdul-Wahab worked with Amish farmers to bring camel milk to American consumers even before US regulators approved it. Through perseverance, he eventually found a network of Amish camel milk farmers and started selling the product via social media. Now his company, Desert Farms, sells to giant mainstream retailers like Whole Foods Market. Those on the fringe don’t always have the option of traditional, corporate jobs and that forces them to think more creatively about how to make a living, Clay said. They must develop grit and resilience in order to last outside the cushy confines of cubicle life. “In many cases scarcity is the mother of invention,” Clay said." }
-        ],
-        questionGroups: [
-          {
-            id: "g3",
-            range: "Questions 14-21",
-            instruction: "Reading Passage 2 has eight paragraphs A-H. Match the headings below with the paragraphs. Write the correct letter, A-H, in boxes 14-21.",
-            type: "matching-headings",
-            questions: [
-              { id: "q14", number: 14, type: "matching-headings", text: "Jailbreak with creative thinking", options: ["A", "B", "C", "D", "E", "F", "G", "H"], answer: "C" },
-              { id: "q15", number: 15, type: "matching-headings", text: "Five common traits among rule-breakers", options: ["A", "B", "C", "D", "E", "F", "G", "H"], answer: "G" },
-              { id: "q16", number: 16, type: "matching-headings", text: "Comparison between criminals and traditional businessmen", options: ["A", "B", "C", "D", "E", "F", "G", "H"], answer: "B" },
-              { id: "q17", number: 17, type: "matching-headings", text: "Can drug baron's escape teach legitimate corporations?", options: ["A", "B", "C", "D", "E", "F", "G", "H"], answer: "A" },
-              { id: "q18", number: 18, type: "matching-headings", text: "Great entrepreneur", options: ["A", "B", "C", "D", "E", "F", "G", "H"], answer: "H" },
-              { id: "q19", number: 19, type: "matching-headings", text: "How criminal groups deceive the law", options: ["A", "B", "C", "D", "E", "F", "G", "H"], answer: "D" },
-              { id: "q20", number: 20, type: "matching-headings", text: "The difference between legal and illegal organisations", options: ["A", "B", "C", "D", "E", "F", "G", "H"], answer: "E" },
-              { id: "q21", number: 21, type: "matching-headings", text: "Similarity between criminals and start-up founders", options: ["A", "B", "C", "D", "E", "F", "G", "H"], answer: "F" }
-            ]
-          },
-          {
-            id: "g4",
-            range: "Questions 22-25",
-            instruction: "Complete the sentences below. Write ONLY ONE WORD from the passage for each answer.",
-            type: "fill-in-blank",
-            questions: [
-              { id: "q22", number: 22, type: "fill-in-blank", text: "To escape from a prison, Joaquin Guzman had to use such traits as creative thinking, long-term planning and ________.", answer: "perseverance" },
-              { id: "q23", number: 23, type: "fill-in-blank", text: "The Sinaloa cartel built a grand underground tunnel and even used a ________ to avoid the fence.", answer: "catapult" },
-              { id: "q24", number: 24, type: "fill-in-blank", text: "The main difference between two groups is that criminals, unlike large corporations, often have ________ encoded into their daily life.", answer: "improvisation" },
-              { id: "q25", number: 25, type: "fill-in-blank", text: "Due to being persuasive, Walid Abdul-Wahab found a ________ of Amish camel milk farmers.", answer: "network" }
-            ]
-          },
-          {
-            id: "g5",
-            range: "Question 26",
-            instruction: "Choose the correct letter, A, B, C or D.",
-            type: "mcq",
-            questions: [
-              {
-                id: "q26",
-                number: 26,
-                type: "mcq",
-                text: "The main goal of this article is to:",
-                options: [
-                  "A. Show different ways of illegal activity",
-                  "B. Give an overview of various criminals and their gangs",
-                  "C. Draw a comparison between legal and illegal business, providing examples",
-                  "D. Justify criminals with creative thinking"
-                ],
-                answer: "C. Draw a comparison between legal and illegal business, providing examples"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: "p3",
-        title: "Passage 3: Renewable Energy Storage Solutions",
-        content: [
-          { text: "The transition to renewable energy sources, such as wind and solar, faces a significant hurdle: intermittency. The sun doesn't always shine, and the wind doesn't always blow. To maintain a stable power grid, energy must be stored when production is high and released when it is low." },
-          { text: "Lithium-ion batteries have dominated the storage market for the past decade, largely due to their high energy density and falling costs. However, they are best suited for short-duration storage (2 to 4 hours). For long-duration storage, alternative technologies are being explored." },
-          { text: "Pumped hydro storage is the oldest and most widely used large-scale method. It involves pumping water up to a reservoir when excess energy is available, and letting it flow back down through turbines when energy is needed. While highly efficient, it requires specific geographical conditions." }
-        ],
-        questionGroups: [
-          {
-            id: "g6",
-            range: "Questions 27-40",
-            instruction: "Complete the following sentences using NO MORE THAN TWO WORDS.",
-            type: "fill-in-blank",
-            questions: [
-              ...Array.from({ length: 14 }).map((_, i) => ({
-                id: `q${i + 27}`,
-                number: i + 27,
-                type: "fill-in-blank" as const,
-                text: `Pumped hydro storage involves pumping ________ up to a reservoir. (Question ${i + 27})`,
-                answer: "water"
-              }))
-            ]
-          }
-        ]
       }
     ]
   },
   readingTest2,
+  readingTest3,
+  readingTest4,
+  readingTest5,
+  readingTest6,
+  readingTest7,
+  readingTest8,
   originalTest1
 ];
