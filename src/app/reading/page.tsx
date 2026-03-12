@@ -17,7 +17,6 @@ export default function ReadingTest() {
   const [band, setBand] = useState("");
   const [currentPassageIdx, setCurrentPassageIdx] = useState(0);
 
-  // When a test is selected, reset everything
   const handleSelectTest = (test: ReadingTestType) => {
     setSelectedTest(test);
     setTimeLeft(test.timeLimitSeconds);
@@ -53,7 +52,7 @@ export default function ReadingTest() {
   }
 
   const currentPassage = selectedTest.passages[currentPassageIdx];
-  const allQuestions = selectedTest.passages.flatMap(p => p.questions);
+  const allQuestions = selectedTest.passages.flatMap(p => p.questionGroups.flatMap(g => g.questions));
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -66,12 +65,20 @@ export default function ReadingTest() {
     setAnswers(prev => ({ ...prev, [qNumber]: answer }));
   };
 
+  const cleanString = (str: string) => str.toLowerCase().replace(/[^\w\s]/g, '').trim();
+
   const handleFinish = () => {
     if (submitted) return;
     let currentScore = 0;
     allQuestions.forEach((q) => {
-      if (answers[q.number]?.toLowerCase().trim() === q.answer.toLowerCase().trim()) {
+      const uAnswer = answers[q.number] || "";
+      if (cleanString(uAnswer) === cleanString(q.answer)) {
         currentScore++;
+      } else if (q.type === 'matching-headings') {
+        // Special strict case for matching headings (just the letter A, B, etc)
+        if (uAnswer.trim().toUpperCase() === q.answer.trim().toUpperCase()) {
+          currentScore++;
+        }
       }
     });
     
@@ -84,11 +91,10 @@ export default function ReadingTest() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-100 -mx-4 sm:-mx-6 lg:-mx-8 -my-8">
-      {/* Top Navigation Bar - Exam Style */}
+      {/* Top Navigation Bar */}
       <div className="bg-slate-900 text-white px-6 py-3 flex justify-between items-center shrink-0 shadow-sm z-10">
         <div className="flex items-center space-x-4">
           <h1 className="text-xl font-bold tracking-wider hidden sm:block">{selectedTest.title}</h1>
-          
           <div className="flex bg-slate-800 rounded-md overflow-hidden p-1">
             {selectedTest.passages.map((p, idx) => (
               <button
@@ -111,11 +117,7 @@ export default function ReadingTest() {
             </svg>
             <span>{formatTime(timeLeft)}</span>
           </div>
-          <Button 
-            onClick={handleFinish}
-            disabled={submitted}
-            className={`${submitted ? 'bg-green-600' : 'bg-blue-600'}`}
-          >
+          <Button onClick={handleFinish} disabled={submitted} className={`${submitted ? 'bg-green-600' : 'bg-blue-600'}`}>
             {submitted ? `Band: ${band} (${score}/40)` : 'Finish Test'}
           </Button>
           <button onClick={() => setSelectedTest(null)} className="text-sm font-semibold text-slate-400 hover:text-white ml-2">Exit</button>
@@ -124,107 +126,138 @@ export default function ReadingTest() {
 
       {/* Main Split Content Area */}
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+        
         {/* LEFT PANEL: Reading Passage */}
         <div className="w-full md:w-1/2 bg-white border-r border-slate-300 overflow-y-auto p-10 shadow-inner">
           <h2 className="text-3xl font-bold mb-8 text-slate-900 font-serif leading-snug">{currentPassage.title}</h2>
           <div className="prose prose-lg max-w-none text-slate-800 leading-relaxed font-serif space-y-6">
             {currentPassage.content.map((paragraph, idx) => (
-              <p key={idx}>{paragraph}</p>
+              <div key={idx} className="flex">
+                {paragraph.label && (
+                  <div className="font-bold text-slate-900 mr-4 shrink-0 w-6">{paragraph.label}</div>
+                )}
+                <p className="flex-1">{paragraph.text}</p>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* RIGHT PANEL: Questions */}
+        {/* RIGHT PANEL: Questions grouped by blocks */}
         <div className="w-full md:w-1/2 bg-slate-50 overflow-y-auto p-10">
-          <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 mb-6">
-            <h3 className="font-bold text-lg mb-4 text-slate-900">Questions {currentPassage.questions[0].number}-{currentPassage.questions[currentPassage.questions.length - 1].number}</h3>
-            
-            <div className="space-y-10">
-              {currentPassage.questions.map((q) => {
-                const isSelected = !!answers[q.number];
-                const isCorrect = submitted && answers[q.number]?.toLowerCase().trim() === q.answer.toLowerCase().trim();
-                const isWrong = submitted && !isCorrect;
+          
+          {currentPassage.questionGroups.map((group) => (
+            <div key={group.id} className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 mb-8">
+              <div className="bg-slate-100 p-4 rounded-lg border border-slate-200 mb-6">
+                <h3 className="font-bold text-lg text-slate-900 mb-1">{group.range}</h3>
+                <p className="text-slate-700 italic">{group.instruction}</p>
+              </div>
+              
+              <div className="space-y-8">
+                {group.questions.map((q) => {
+                  const uAnswer = answers[q.number] || "";
+                  const isCorrect = submitted && (cleanString(uAnswer) === cleanString(q.answer) || (q.type === 'matching-headings' && uAnswer.toUpperCase() === q.answer.toUpperCase()));
+                  const isWrong = submitted && !isCorrect;
 
-                return (
-                  <div key={q.id} className="flex flex-col space-y-4 pb-8 border-b border-slate-100 last:border-0 relative">
-                    <div className="flex space-x-4">
-                      <span className="font-bold text-slate-800 bg-slate-200 w-8 h-8 flex items-center justify-center rounded-full shrink-0 shadow-sm">{q.number}</span>
-                      <p className="text-slate-800 text-lg font-medium">{q.text}</p>
-                    </div>
+                  return (
+                    <div key={q.id} className="flex flex-col space-y-4 pb-6 border-b border-slate-100 last:border-0 relative">
+                      <div className="flex space-x-4">
+                        <span className="font-bold text-slate-800 bg-slate-200 w-8 h-8 flex items-center justify-center rounded-full shrink-0 shadow-sm">{q.number}</span>
+                        <p className="text-slate-800 text-lg font-medium">{q.text}</p>
+                      </div>
 
-                    <div className="ml-12 flex flex-wrap gap-4">
-                      {(q.type === 'tfng' || q.type === 'ynng' || q.type === 'mcq') && q.options?.map(opt => {
-                        const optSelected = answers[q.number] === opt;
-                        const optCorrect = submitted && q.answer === opt;
-                        const optWrongChoice = submitted && optSelected && q.answer !== opt;
-                        
-                        let btnClass = "bg-white hover:bg-slate-50 border-slate-300 text-slate-700";
-                        if (optSelected) btnClass = "bg-blue-600 text-white border-blue-600";
-                        if (submitted) {
-                          if (optCorrect) btnClass = "bg-green-600 text-white border-green-600";
-                          if (optWrongChoice) btnClass = "bg-red-500 text-white border-red-500";
-                        }
+                      <div className="ml-12 flex flex-wrap gap-4">
+                        {(group.type === 'tfng' || group.type === 'ynng' || group.type === 'mcq') && q.options?.map(opt => {
+                          const optSelected = uAnswer === opt;
+                          const optCorrect = submitted && q.answer === opt;
+                          const optWrongChoice = submitted && optSelected && q.answer !== opt;
+                          
+                          let btnClass = "bg-white hover:bg-slate-50 border-slate-300 text-slate-700";
+                          if (optSelected) btnClass = "bg-blue-600 text-white border-blue-600";
+                          if (submitted) {
+                            if (optCorrect) btnClass = "bg-green-600 text-white border-green-600";
+                            if (optWrongChoice) btnClass = "bg-red-500 text-white border-red-500";
+                          }
 
-                        return (
-                          <label key={opt} className={`flex items-center justify-center px-5 py-2.5 border rounded-lg cursor-pointer transition-all shadow-sm ${btnClass}`}>
-                            <input 
-                              type="radio" 
-                              name={`question-${q.number}`} 
-                              value={opt} 
-                              className="hidden" 
+                          return (
+                            <label key={opt} className={`flex items-center justify-center px-5 py-2.5 border rounded-lg cursor-pointer transition-all shadow-sm ${btnClass}`}>
+                              <input 
+                                type="radio" 
+                                name={`question-${q.number}`} 
+                                value={opt} 
+                                className="hidden" 
+                                disabled={submitted}
+                                onChange={() => handleAnswer(q.number, opt)} 
+                              />
+                              <span className="font-semibold text-sm">{opt}</span>
+                            </label>
+                          );
+                        })}
+
+                        {/* Matching Headings uses a dropdown or text input */}
+                        {group.type === 'matching-headings' && (
+                          <div className="w-full max-w-xs flex items-center space-x-3">
+                            <span className="text-slate-500 font-semibold">Paragraph</span>
+                            <select 
                               disabled={submitted}
-                              onChange={() => handleAnswer(q.number, opt)} 
-                            />
-                            <span className="font-semibold text-sm">{opt}</span>
-                          </label>
-                        );
-                      })}
+                              value={uAnswer}
+                              onChange={(e) => handleAnswer(q.number, e.target.value)}
+                              className={`flex-1 bg-white border-2 rounded-lg outline-none px-4 py-2 font-bold transition-all text-lg shadow-inner ${
+                                submitted 
+                                  ? isCorrect ? 'border-green-500 text-green-700 bg-green-50' : 'border-red-500 text-red-700 bg-red-50'
+                                  : 'border-slate-300 focus:border-blue-500 text-slate-900'
+                              }`}
+                            >
+                              <option value="">-</option>
+                              {q.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                          </div>
+                        )}
 
-                      {q.type === 'fill-in-blank' && (
-                        <div className="w-full max-w-sm">
-                          <input 
-                            type="text" 
-                            value={answers[q.number] || ""}
-                            disabled={submitted}
-                            onChange={(e) => handleAnswer(q.number, e.target.value)}
-                            className={`w-full bg-white border-2 rounded-lg outline-none px-4 py-2.5 font-medium transition-all text-base shadow-inner ${
-                              submitted 
-                                ? isCorrect 
-                                  ? 'border-green-500 text-green-700 bg-green-50' 
-                                  : 'border-red-500 text-red-700 bg-red-50'
-                                : 'border-slate-300 focus:border-blue-500 text-slate-900'
-                            }`} 
-                            placeholder="Type your answer..."
-                          />
+                        {group.type === 'fill-in-blank' && (
+                          <div className="w-full max-w-md">
+                            <input 
+                              type="text" 
+                              value={uAnswer}
+                              disabled={submitted}
+                              onChange={(e) => handleAnswer(q.number, e.target.value)}
+                              className={`w-full bg-white border-2 rounded-lg outline-none px-4 py-2.5 font-medium transition-all text-base shadow-inner ${
+                                submitted 
+                                  ? isCorrect ? 'border-green-500 text-green-700 bg-green-50' : 'border-red-500 text-red-700 bg-red-50'
+                                  : 'border-slate-300 focus:border-blue-500 text-slate-900'
+                              }`} 
+                              placeholder="Type answer..."
+                            />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {isWrong && (
+                        <div className="ml-12 mt-2 text-sm text-green-700 font-bold bg-green-100 px-3 py-1 rounded-md border border-green-200 inline-block w-fit">
+                          Answer: {q.answer}
                         </div>
                       )}
                     </div>
-                    
-                    {isWrong && (
-                      <div className="ml-12 mt-2 text-sm text-green-700 font-bold bg-green-100 px-3 py-1 rounded-md border border-green-200 inline-block w-fit">
-                        Answer: {q.answer}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Bottom Navigation Bar (40 Questions Tracker) */}
+      {/* Bottom Navigation Bar */}
       <div className="bg-white border-t border-slate-300 p-4 flex justify-start items-center shrink-0 space-x-1 overflow-x-auto shadow-md z-10">
         {allQuestions.map((q) => {
           const isAnswered = !!answers[q.number];
-          const isCurrentPassage = currentPassage.questions.some(cq => cq.number === q.number);
+          const isCurrentPassage = currentPassage.questionGroups.some(g => g.questions.some(cq => cq.number === q.number));
           
           let boxClass = "bg-white text-slate-700 border-slate-300 hover:bg-slate-50";
           if (isAnswered) boxClass = "bg-slate-800 text-white border-slate-900";
           if (isCurrentPassage && !isAnswered) boxClass = "bg-blue-50 text-blue-800 border-blue-300";
 
           if (submitted) {
-            const correct = answers[q.number]?.toLowerCase().trim() === q.answer.toLowerCase().trim();
+            const uAnswer = answers[q.number] || "";
+            const correct = (cleanString(uAnswer) === cleanString(q.answer)) || (q.type === 'matching-headings' && uAnswer.toUpperCase() === q.answer.toUpperCase());
             if (correct) {
               boxClass = "bg-green-500 text-white border-green-600";
             } else {
@@ -236,7 +269,7 @@ export default function ReadingTest() {
             <button 
               key={q.number}
               onClick={() => {
-                const pIdx = selectedTest.passages.findIndex(p => p.questions.some(cq => cq.number === q.number));
+                const pIdx = selectedTest.passages.findIndex(p => p.questionGroups.some(g => g.questions.some(cq => cq.number === q.number)));
                 if (pIdx !== -1) setCurrentPassageIdx(pIdx);
               }}
               className={`w-9 h-9 shrink-0 flex items-center justify-center rounded-sm border text-xs font-bold transition-colors ${boxClass}`}

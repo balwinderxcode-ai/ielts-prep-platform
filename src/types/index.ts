@@ -3,17 +3,30 @@ export type QuestionType = "tfng" | "ynng" | "mcq" | "fill-in-blank" | "matching
 export interface Question {
   id: string;
   number: number;
-  type: QuestionType;
+  type: QuestionType; // Retained for backwards compatibility in UI loops if needed, though group type handles it
   text: string;
-  options?: string[];
+  options?: string[]; // For MCQ or Matching
   answer: string;
+}
+
+export interface QuestionGroup {
+  id: string;
+  range: string;
+  instruction: string;
+  type: QuestionType;
+  questions: Question[];
+}
+
+export interface Paragraph {
+  label?: string; // e.g., "A", "B"
+  text: string;
 }
 
 export interface Passage {
   id: string;
   title: string;
-  content: string[];
-  questions: Question[];
+  content: Paragraph[];
+  questionGroups: QuestionGroup[];
 }
 
 export interface ReadingTest {
