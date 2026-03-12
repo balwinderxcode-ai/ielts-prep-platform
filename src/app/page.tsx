@@ -1,6 +1,28 @@
+"use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useTestStore } from "../store";
 
 export default function Home() {
+  const { progress } = useTestStore();
+  const [isClient, setIsClient] = useState(false);
+
+  // Fix hydration mismatch for Zustand persist
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const totalTests = isClient 
+    ? progress.readingCompleted + progress.listeningCompleted + progress.writingCompleted + progress.speakingCompleted 
+    : 0;
+  
+  // Calculate average band (simplified logic)
+  const readingBand = progress.readingCompleted > 0 ? (progress.readingScore / (progress.readingCompleted * 3)) * 9 : 0;
+  const listeningBand = progress.listeningCompleted > 0 ? (progress.listeningScore / (progress.listeningCompleted * 2)) * 9 : 0;
+  const avgBand = totalTests > 0 && (readingBand > 0 || listeningBand > 0)
+    ? ((readingBand + listeningBand) / 2).toFixed(1) 
+    : "0.0";
+
   const modules = [
     { 
       title: "Academic Reading Test", 
@@ -28,35 +50,39 @@ export default function Home() {
       path: "/speaking", 
       desc: "Live microphone recording. Practice your 2-minute long turn with playback and mock cue cards.", 
       color: "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100",
-      icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+      icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2 2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
     }
   ];
 
   return (
     <div className="flex flex-col items-center justify-start pt-8 pb-16">
       <div className="text-center max-w-3xl mb-12">
-        <h1 className="text-5xl font-extrabold text-gray-900 tracking-tight mb-6 leading-tight">
+        <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight mb-6 leading-tight">
           Master the Computer-Delivered IELTS Exam
         </h1>
-        <p className="text-xl text-gray-600 font-medium">
+        <p className="text-xl text-slate-600 font-medium">
           Experience the exact UI of the real test. Practice your reading, writing, listening, and speaking skills in a production-grade environment.
         </p>
       </div>
 
       {/* Dashboard Stats */}
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-12 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">Your Dashboard</h2>
-          <p className="text-gray-500 font-medium">Track your progress across all 4 modules.</p>
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-12 flex flex-col md:flex-row items-center justify-between">
+        <div className="mb-6 md:mb-0 text-center md:text-left">
+          <h2 className="text-2xl font-bold text-slate-800 mb-1">Your Dashboard</h2>
+          <p className="text-slate-500 font-medium">Track your progress across all 4 modules.</p>
         </div>
         <div className="flex space-x-12">
           <div className="text-center">
-            <span className="block text-4xl font-extrabold text-blue-600">0</span>
-            <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Tests Taken</span>
+            <span className="block text-4xl font-extrabold text-blue-600">
+              {isClient ? totalTests : 0}
+            </span>
+            <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Tests Taken</span>
           </div>
           <div className="text-center">
-            <span className="block text-4xl font-extrabold text-emerald-600">0.0</span>
-            <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Avg Band</span>
+            <span className="block text-4xl font-extrabold text-emerald-600">
+              {isClient ? avgBand : "0.0"}
+            </span>
+            <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Avg Band</span>
           </div>
         </div>
       </div>

@@ -17,6 +17,6 @@
 - [x] **Speaking:** Multi-part progression (Part 1, 2, 3), robust microphone recording UI, audio playback.
 
 ## Phase 4: Dashboard & Polish
-- [ ] Build User Dashboard (Test history, Band score calculation, progress charts).
-- [ ] SEO Optimization (Meta tags, sitemap).
-- [ ] Final QA and production Netlify deployment.
+- [x] Build User Dashboard (Test history, Band score calculation, progress charts).
+- [x] SEO Optimization (Meta tags, sitemap).
+- [x] Final QA and production Netlify deployment.
